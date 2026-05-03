@@ -45,7 +45,6 @@ Planned tooling for automated metrics includes approaches consistent with the pr
 | Item | Description |
 |------|-------------|
 | `rephrased_rag.tex` | Current IEEE conference-style paper draft for submission. |
-| `paper_ieee.tex` | Earlier IEEE draft version retained for reference. |
 
 
 **In this folder:** `requirements.txt` lists intended Python dependencies for ingestion, dual retrieval, Graphiti/Neo4j, vector DB, and TruLens-style evaluation (adjust pins after your teammate’s code lands).
@@ -57,15 +56,15 @@ If you keep Phase 1 PDF (`*_proposal.pdf`) and Phase 2 PDF (`*_research_report.p
 ## Course & authorship
 
 - **Institution:** FAST NUCES, Department of AI & DS, Islamabad, Pakistan  
-- **Authors:** Muhammad Ibrahim Kiani (`i232536@isb.nu.edu.pk`), Muhammad Noor (`i232520@isb.nu.edu.pk`)
+- **Authors:** Muhammad Ibrahim Kiani (`i232536@isb.nu.edu.pk`), Muhammad Noor ul Haq (`i232520@isb.nu.edu.pk`)
 
 ## Phase status
 
 | Phase | Deliverable | Status |
 |-------|-------------|--------|
-| Phase 1 | One-page proposal | Completed (see your submitted PDF). |
-| Phase 2 | Mid evaluation / research-oriented report | Completed (see your submitted PDF). |
-| Phase 3 | Full IEEE paper + code + experiments + analysis | **In progress** — LaTeX draft ready; code & benchmarks pending. |
+| Phase 1 | One-page proposal | Completed |
+| Phase 2 | Mid evaluation / research-oriented report | Completed |
+| Phase 3 | Full IEEE paper + code + experiments + analysis | Completed |
 
 
 ## Roadmap
