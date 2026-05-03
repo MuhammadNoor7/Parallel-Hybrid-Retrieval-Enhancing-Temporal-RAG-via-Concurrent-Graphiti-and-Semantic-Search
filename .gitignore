@@ -1,59 +1,6 @@
-# Byte-compiled
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Packaging / install artifacts
-.Python
-build/
-dist/
-*.egg-info/
-.eggs/
-*.egg
-MANIFEST
-
-# Virtual environments & secrets
 .env
-.env.*
-.venv/
-venv/
-ENV/
 
-# Testing & coverage
-.pytest_cache/
-.coverage
-htmlcov/
-coverage.xml
-
-# Type checking
-.mypy_cache/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Editors / OS
-.idea/
-.vscode/
-*.swp
-*~
-.DS_Store
-Thumbs.db
-
-# Local logs & outputs
-logs/
-*.log
-
-# LaTeX build (keep .tex / PDF as needed)
-*.aux
-*.bbl
-*.blg
-*.fdb_latexmk
-*.fls
-*.lof
-*.lot
-*.nav
-*.out
-*.snm
-*.synctex.gz
-*.toc
-*.xdv
+.venv
+__pycache__
+rag.txt
+zep.txt

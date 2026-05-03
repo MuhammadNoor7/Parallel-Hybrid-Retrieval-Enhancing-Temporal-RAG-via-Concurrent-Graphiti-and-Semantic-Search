@@ -1,30 +1,4 @@
-# Parallel Hybrid Retrieval — Python dependencies
-# Graphiti (graphiti-core) recommends Python 3.10+ and Neo4j 5.26+ as a separate service.
-# Pin versions with `pip freeze > requirements.lock.txt` once your stack is fixed.
-
-# --- Core ---
-numpy>=1.26,<3
-pandas>=2.1,<3
-
-# --- LLM / embeddings (proposal: e.g. OpenAI embeddings + generator) ---
-openai>=1.40,<2
-
-# --- Vector store (semantic retrieval): keep one primary; install both only if you use both ---
-qdrant-client>=1.11,<2
-# chromadb>=0.5,<1
-
-# --- Temporal knowledge graph (Graphiti / Zep) ---
-graphiti-core>=0.29,<1
-
-# Neo4j Python driver (Graphiti talks to Neo4j)
-neo4j>=5.23,<6
-
-# --- RAG evaluation (groundedness / faithfulness; installs trulens-* stack) ---
-trulens-eval>=2.0,<4
-
-# --- Config & CLI ---
-python-dotenv>=1.0,<2
-tqdm>=4.66,<5
-
-# --- Optional: Hugging Face datasets when loading RAGTruth or similar ---
-# datasets>=3.0,<4
+graphiti-core>=0.3.0
+openai>=1.0.0                 # graphiti-core's OpenAIClient still needs the SDK
+sentence-transformers>=3.0.0  # local embeddings
+qdrant-client
