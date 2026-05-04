@@ -63,8 +63,9 @@ OPENROUTER_API_KEY: str = os.getenv(
     "OPENROUTER_API_KEY",
     "",
 )
-EVAL_MODEL: str = "openai/gpt-oss-120b:free"
+EVAL_MODEL: str = "inclusionai/ling-2.6-1t:free"
 GRAPH_LLM_MODEL: str = "inclusionai/ling-2.6-1t:free"
+SMALL_MODEL: str = "inclusionai/ling-2.6-1t:free"
 OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 
 EMBED_MODEL: str = os.getenv("EMBED_MODEL", "BAAI/bge-base-en-v1.5")
@@ -74,13 +75,13 @@ NEO4J_USER: str = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD: str = os.environ["NEO4J_PASSWORD"]
 
 QDRANT_URL: str = os.getenv("QDRANT_URL", "http://localhost:7333")
-QDRANT_COLLECTION: str = os.getenv("QDRANT_COLLECTION", "longmemeval_collection")
-QDRANT_TOP_K: int = 5           # top-k chunks for semantic search
+QDRANT_COLLECTION: str = os.getenv("QDRANT_COLLECTION", "longmemeval")
+QDRANT_TOP_K: int = 10           # top-k chunks for semantic search
 
 JSON_PATH: str = os.getenv("JSON_PATH", "data/longmemeval_s.json")
 RESULTS_DIR: Path = Path("results")
 
-GRAPHITI_TOP_K: int = 20        # top-k facts/entities from knowledge graph
+GRAPHITI_TOP_K: int = 200        # top-k facts/entities from knowledge graph
 RATE_LIMIT_SLEEP: float = 4.0   # seconds between OpenRouter calls
 
 # Set to None to evaluate all; set to e.g. 10 for a quick smoke-test
@@ -93,7 +94,7 @@ class LLMCallLogger:
     """
     Appends one JSON line to results/llm_calls.jsonl after every LLM call.
 
-    Fields: ts, label, question_id, q_idx, model, input, output,
+    Fields: ts, label, question_id, model, input, output,
             prompt_tokens, latency_s, correct.
 
     Tail live with: tail -f results/llm_calls.jsonl | jq .
@@ -108,7 +109,6 @@ class LLMCallLogger:
         *,
         label: str,
         question_id: str,
-        q_idx: int,
         model: str,
         messages: list[dict],
         output: str,
@@ -120,7 +120,6 @@ class LLMCallLogger:
             "ts": datetime.now(timezone.utc).isoformat(),
             "label": label,
             "question_id": question_id,
-            "q_idx": q_idx,
             "model": model,
             "input": messages,
             "output": output,
@@ -184,7 +183,6 @@ async def openrouter_chat(
     label: str,
     logger: LLMCallLogger,
     question_id: str,
-    q_idx: int,
     model: str = EVAL_MODEL,
     max_tokens: int = 512,
     judge_correct: Optional[bool] = None,
@@ -225,7 +223,6 @@ async def openrouter_chat(
             logger.log(
                 label=label,
                 question_id=question_id,
-                q_idx=q_idx,
                 model=model,
                 messages=messages,
                 output=text,
@@ -246,7 +243,6 @@ async def openrouter_chat(
     logger.log(
         label=f"{label}:ERROR",
         question_id=question_id,
-        q_idx=q_idx,
         model=model,
         messages=messages,
         output="[ERROR: all retries failed]",
@@ -513,9 +509,12 @@ async def build_hybrid_context(
 ANSWER_SYSTEM = (
     "You are a helpful AI assistant with access to a memory of past conversations. "
     "Answer the user's question based on the context provided. "
-    "Be concise and direct. If the answer is not in the context, say 'I don't know'. "
+    "Be concise and direct. Do not give generic answers and ALWAYS link the answers to the user's experiences and conversations"
+    "Infer and assume where needed based on the user's question history."
     "If context is marked ⚠️ TEMPORALLY EXPIRED, treat it as outdated — "
     "prefer non-expired context or Graphiti facts when they conflict."
+    "Prefer Graphiti facts over Qdrant facts (if given)."
+    ""
 )
 
 
@@ -566,7 +565,6 @@ async def evaluate_question(
     embedder: SentenceTransformerEmbedder,
     graphiti: Graphiti,
     case: dict,
-    q_idx: int,
     logger: LLMCallLogger,
 ) -> dict:
     """
@@ -576,20 +574,19 @@ async def evaluate_question(
     question_id = case["question_id"]
     question_type = case["question_type"]
     question_date = case["question_date"]
-    question = case["questions"][q_idx]
-    ground_truth = case["answers"][q_idx]
+    question = case["question"]
+    ground_truth = case["answer"]
 
     result = {
         "question_id": question_id,
         "question_type": question_type,
         "question_date": question_date,
-        "question_index": q_idx,
         "question": question,
         "ground_truth": ground_truth,
     }
 
     # Shared kwargs for openrouter_chat
-    ctx = dict(logger=logger, question_id=question_id, q_idx=q_idx)
+    ctx = dict(logger=logger, question_id=question_id)
 
     async def run_approach(
         approach_label: str,
@@ -620,7 +617,6 @@ async def evaluate_question(
             logger.log(
                 label=f"{prefix}_judge:verdict",
                 question_id=question_id,
-                q_idx=q_idx,
                 model=EVAL_MODEL,
                 messages=judge_msgs,
                 output=judge_resp,
@@ -664,15 +660,15 @@ async def evaluate_question(
     #  to avoid bursting the OpenRouter 20-RPM free-tier limit)
     qdrant_metrics = await run_approach(
         "qdrant", qdrant_ctx,
-        qdrant_ctx[:300].replace("\n", " ") + "…",
+        qdrant_ctx
     )
     graph_metrics = await run_approach(
         "graph", graph_ctx,
-        graph_ctx[:300].replace("\n", " ") + "…",
+        graph_ctx
     )
     hybrid_metrics = await run_approach(
         "hybrid", hybrid_ctx,
-        hybrid_ctx[:300].replace("\n", " ") + "…",
+        hybrid_ctx
     )
 
     result.update(qdrant_metrics)
@@ -684,7 +680,7 @@ async def evaluate_question(
     def l(key): return f"{result.get(key, 0.0):.1f}s"
 
     print(
-        f"      Q{q_idx}: "
+        f"      Result: "
         f"Qdrant={v('qdrant_correct')}({l('qdrant_latency_s')}) | "
         f"Graph={v('graph_correct')}({l('graph_latency_s')}) | "
         f"Hybrid={v('hybrid_correct')}({l('hybrid_latency_s')})"
@@ -868,6 +864,7 @@ async def main() -> None:
         config=LLMConfig(
             api_key=OPENROUTER_API_KEY,
             model=GRAPH_LLM_MODEL,
+            small_model=SMALL_MODEL,
             base_url=OPENROUTER_BASE_URL,
         )
     )
@@ -886,14 +883,12 @@ async def main() -> None:
         for case_idx, case in enumerate(data, start=1):
             qid   = case["question_id"]
             qtype = case["question_type"]
-            n_qs  = len(case["questions"])
-            print(f"[{case_idx}/{total}] {qid}  type={qtype}  questions={n_qs}")
+            print(f"[{case_idx}/{total}] {qid}  type={qtype}")
 
-            for q_idx in range(n_qs):
-                result = await evaluate_question(
-                    qdrant, embedder, graphiti, case, q_idx, logger
-                )
-                all_results.append(result)
+            result = await evaluate_question(
+                qdrant, embedder, graphiti, case, logger
+            )
+            all_results.append(result)
 
             # Checkpoint after every case
             raw_path = RESULTS_DIR / "raw_results.json"

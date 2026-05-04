@@ -1,0 +1,29 @@
+[
+  {
+    "approach": "Qdrant (Semantic)",
+    "model": "openai/gpt-4o-2024-11-20",
+    "n_questions": 15,
+    "score_pct": 66.7,
+    "mean_latency_s": 11.324,
+    "latency_iqr_s": 1.5,
+    "avg_prompt_tokens": 31232
+  },
+  {
+    "approach": "Graphiti (Graph)",
+    "model": "openai/gpt-4o-2024-11-20",
+    "n_questions": 15,
+    "score_pct": 66.7,
+    "mean_latency_s": 9.732,
+    "latency_iqr_s": 2.879,
+    "avg_prompt_tokens": 9625
+  },
+  {
+    "approach": "Hybrid (Parallel)",
+    "model": "openai/gpt-4o-2024-11-20",
+    "n_questions": 15,
+    "score_pct": 73.3,
+    "mean_latency_s": 15.652,
+    "latency_iqr_s": 2.742,
+    "avg_prompt_tokens": 40759
+  }
+]

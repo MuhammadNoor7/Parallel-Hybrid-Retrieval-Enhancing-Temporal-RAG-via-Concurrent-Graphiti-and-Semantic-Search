@@ -1,0 +1,4 @@
+approach,model,n_questions,score_pct,mean_latency_s,latency_iqr_s,avg_prompt_tokens
+Qdrant (Semantic),openai/gpt-4o-2024-11-20,15,66.7,11.324,1.5,31232
+Graphiti (Graph),openai/gpt-4o-2024-11-20,15,66.7,9.732,2.879,9625
+Hybrid (Parallel),openai/gpt-4o-2024-11-20,15,73.3,15.652,2.742,40759

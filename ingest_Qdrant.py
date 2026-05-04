@@ -8,8 +8,8 @@ from qdrant_client.models import Distance, VectorParams, PointStruct
 from local_embedder import SentenceTransformerEmbedder
 
 # --- Configuration ---
-JSON_FILE_PATH = "data/longmemeval_s.json"
-COLLECTION_NAME = "longmemeval_collection"
+JSON_FILE_PATH = "data/single-session-preference.json"
+COLLECTION_NAME = "longmemeval"
 BATCH_SIZE = 32 # Adjust based on your VRAM (32-64 is usually safe for an 8GB GPU)
 
 async def process_and_upload_batch(client, embedder, texts, metadata):

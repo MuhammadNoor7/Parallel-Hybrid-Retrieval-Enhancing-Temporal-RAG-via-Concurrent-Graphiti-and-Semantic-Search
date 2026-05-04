@@ -1,0 +1,39 @@
+The longmemeval_s.json file contains a list of objects, each representing a complex evaluation case. Below is a summary of the schema based on my analysis:
+
+Root Level
+The file is a JSON array containing objects with the following keys:
+
+question_id (string): A unique identifier for the evaluation case (e.g., "852ce960").
+question_type (string): The category of the evaluation (e.g., "knowledge-update").
+question_date (string): The timestamp/date of the question (e.g., "2023/12/18 (Mon) 04:17").
+question (string): A specific questions related to the case.
+answer (string): A string of ground-truth answer corresponding to the question.
+answer_session_id (array of strings): Mapping of which session IDs contain the answer.
+haystack_dates (array of strings): Timestamps for documents/sessions in the "haystack" (background information).
+haystack_session_ids (array of strings): Unique identifiers for the sessions in the haystack.
+haystack_sessions (array of arrays): The actual content of the background information.
+Item Details
+Haystack Sessions (haystack_sessions)
+Each item in this list is itself a list of message objects, following a typical chat format:
+
+role (string): The speaker role ("user" or "assistant").
+content (string): The text content of the message.
+Summary of Structure:
+[
+  {
+    "question_id": "string",
+    "question_type": "string",
+    "question_date": "string",
+    "question": "string",
+    "answer": "string",
+    "answer_session_ids": ["string", "..."],
+    "haystack_dates": ["string", "..."],
+    "haystack_session_ids": ["string", "..."],
+    "haystack_sessions": [
+      [
+        {"role": "user", "content": "string"},
+        {"role": "assistant", "content": "string"}
+      ]
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "question_type": "single-session-preference",
+    "model": "openai/gpt-4o-2024-11-20",
+    "n": 15,
+    "qdrant_pct": 66.7,
+    "graphiti_pct": 66.7,
+    "hybrid_pct": 73.3,
+    "delta_hybrid_vs_qdrant": 6.6,
+    "delta_hybrid_vs_graphiti": 6.6,
+    "best_approach": "Hybrid"
+  }
+]

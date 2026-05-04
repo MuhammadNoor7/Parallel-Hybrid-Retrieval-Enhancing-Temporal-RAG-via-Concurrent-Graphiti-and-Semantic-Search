@@ -1,123 +1,48 @@
-from __future__ import annotations
-
-import heapq
 import json
-from pathlib import Path
 
-IN_PATH = Path("data/longmemeval_s_cleaned.json")
-OUT_PATH = Path("data/longmemeval_s_cleaned_top5_shortest.json")
-TOP_K = 5
-CHUNK_SIZE = 1024 * 1024
+def extract_shortest_temporal_reasoning(input_file, output_file, num_items=50):
+    try:
+        # 1. Load the original JSON file
+        with open(input_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+        # 2. Filter the data for 'temporal-reasoning' question types
+        temporal_data = [item for item in data if item.get('question_type') == 'single-session-preference']
+        
+        if not temporal_data:
+            print("No items with question_type='temporal-reasoning' were found.")
+            return
 
-
-def main() -> None:
-    # Keep TOP_K smallest spans using a max-heap implemented as a min-heap over negative span.
-    # Tuple layout: (-span, -end_offset, index, start_line, end_line, start_offset, end_offset)
-    heap: list[tuple[int, int, int, int, int, int, int]] = []
-
-    in_string = False
-    escape = False
-    seen_top_array = False
-    in_obj = False
-    brace_depth = 0
-
-    obj_start_line: int | None = None
-    obj_start_offset: int | None = None
-
-    line_num = 1
-    offset = 0
-    obj_index = -1
-
-    with IN_PATH.open("rb") as f:
-        while True:
-            chunk = f.read(CHUNK_SIZE)
-            if not chunk:
-                break
-
-            for b in chunk:
-                if b == 10:  # \n
-                    line_num += 1
-
-                if in_string:
-                    if escape:
-                        escape = False
-                    elif b == 92:  # \\
-                        escape = True
-                    elif b == 34:  # "
-                        in_string = False
-                else:
-                    if b == 34:  # "
-                        in_string = True
-                    else:
-                        if not seen_top_array:
-                            if b == 91:  # [
-                                seen_top_array = True
-                        else:
-                            if in_obj:
-                                if b == 123:  # {
-                                    brace_depth += 1
-                                elif b == 125:  # }
-                                    brace_depth -= 1
-                                    if brace_depth == 0:
-                                        obj_end_line = line_num
-                                        obj_end_offset = offset + 1
-                                        obj_index += 1
-
-                                        assert obj_start_line is not None
-                                        assert obj_start_offset is not None
-
-                                        span = obj_end_line - obj_start_line + 1
-                                        item = (
-                                            -span,
-                                            -obj_end_offset,
-                                            obj_index,
-                                            obj_start_line,
-                                            obj_end_line,
-                                            obj_start_offset,
-                                            obj_end_offset,
-                                        )
-
-                                        if len(heap) < TOP_K:
-                                            heapq.heappush(heap, item)
-                                        else:
-                                            # heap[0] is the *largest* span among kept items.
-                                            if item > heap[0]:
-                                                heapq.heapreplace(heap, item)
-
-                                        in_obj = False
-                            else:
-                                if b == 123:  # {
-                                    in_obj = True
-                                    brace_depth = 1
-                                    obj_start_line = line_num
-                                    obj_start_offset = offset
-                                elif b == 93:  # ]
-                                    # End of top-level array
-                                    seen_top_array = False
-
-                offset += 1
-
-    best: list[tuple[int, int, int, int, int, int]] = []
-    for neg_span, _neg_end_offset, idx, start_line, end_line, start_off, end_off in heap:
-        best.append((-neg_span, idx, start_line, end_line, start_off, end_off))
-
-    best.sort(key=lambda t: (t[0], t[1]))
-
-    rows: list[dict] = []
-    with IN_PATH.open("rb") as f:
-        for span, idx, start_line, end_line, start_off, end_off in best:
-            f.seek(start_off)
-            obj_bytes = f.read(end_off - start_off)
-            obj = json.loads(obj_bytes)
-            rows.append(obj)
-
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    print(f"Wrote {OUT_PATH} with {len(rows)} rows")
-    for rank, (span, idx, start_line, end_line, _start_off, _end_off) in enumerate(best, start=1):
-        print(f"{rank}. index={idx} span_lines={span} file_lines={start_line}-{end_line}")
-
+        # 3. Define a helper function to count the number of JSON lines for an object
+        def count_json_lines(item):
+            # Dump the item to a formatted string to simulate how many lines it takes
+            formatted_json = json.dumps(item, indent=2)
+            return len(formatted_json.splitlines())
+            
+        # 4. Sort the filtered data based on the line count (ascending order)
+        sorted_temporal_data = sorted(temporal_data, key=count_json_lines)
+        
+        # 5. Extract the top 50 (or fewer, if there are less than 50 total)
+        shortest_50 = sorted_temporal_data[:num_items]
+        
+        # 6. Write the results to a new JSON file
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(shortest_50, f, indent=2, ensure_ascii=False)
+            
+        print(f"Successfully extracted {len(shortest_50)} shortest 'temporal-reasoning' items.")
+        print(f"Results saved to: {output_file}")
+        
+    except FileNotFoundError:
+        print(f"Error: The file '{input_file}' was not found.")
+    except json.JSONDecodeError:
+        print(f"Error: The file '{input_file}' is not a valid JSON file.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 if __name__ == "__main__":
-    main()
+    # Define your input and output file paths
+    INPUT_FILEPATH = "data/longmemeval_s_cleaned.json"
+    OUTPUT_FILEPATH = "data/single_reasoning.json"
+    
+    # Run the extraction
+    extract_shortest_temporal_reasoning(INPUT_FILEPATH, OUTPUT_FILEPATH, num_items=15)

@@ -1,0 +1,23 @@
+Spend:
+$10.1
+
+Gemma 4 26B A4B: $6.81
+GPT-4o (2024-11-20): $2.86
+GPT-4.1 Nano: $0.34
+Others: $0.13
+
+Requests:
+13K
+
+Gemma 4 26B A4B: 10K
+GPT-4.1 Nano: 1.86K
+Ling-2.6-1T (free): 474
+Others: 716
+
+Tokens: 
+87.7M
+
+Gemma 4 26B A4B: 63.9M
+Ling-2.6-1T (free): 12.4M
+GPT-4.1 Nano: 3.55M
+Others: 7.87M
